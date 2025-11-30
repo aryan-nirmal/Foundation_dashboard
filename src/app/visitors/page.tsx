@@ -29,18 +29,20 @@ const formFields: FieldConfig<Visitor>[] = [
 ];
 
 export default function VisitorsPage() {
-  const { data = [] } = useQuery({
+  const { data } = useQuery<Visitor[]>({
     queryKey: ["visitors"],
     queryFn: dataService.visitors,
   });
-  const [rows, setRows] = useState<Visitor[]>(data);
+  const [rows, setRows] = useState<Visitor[]>([]);
   const dataRef = useRef<string>("");
 
   useEffect(() => {
-    const dataString = JSON.stringify(data);
-    if (dataRef.current !== dataString) {
-      dataRef.current = dataString;
-      setRows(data);
+    if (data) {
+      const dataString = JSON.stringify(data);
+      if (dataRef.current !== dataString) {
+        dataRef.current = dataString;
+        setRows(data);
+      }
     }
   }, [data]);
 

@@ -12,18 +12,20 @@ const formFields: FieldConfig<Caretaker>[] = [
 ];
 
 export default function CaretakersPage() {
-  const { data = [] } = useQuery({
+  const { data } = useQuery<Caretaker[]>({
     queryKey: ["caretakers"],
     queryFn: dataService.caretakers,
   });
-  const [rows, setRows] = useState<Caretaker[]>(data);
+  const [rows, setRows] = useState<Caretaker[]>([]);
   const dataRef = useRef<string>("");
 
   useEffect(() => {
-    const dataString = JSON.stringify(data);
-    if (dataRef.current !== dataString) {
-      dataRef.current = dataString;
-      setRows(data);
+    if (data) {
+      const dataString = JSON.stringify(data);
+      if (dataRef.current !== dataString) {
+        dataRef.current = dataString;
+        setRows(data);
+      }
     }
   }, [data]);
 

@@ -26,18 +26,20 @@ const formFields: FieldConfig<Donation>[] = [
 ];
 
 export default function DonationsPage() {
-  const { data = [] } = useQuery({
+  const { data } = useQuery<Donation[]>({
     queryKey: ["donations"],
     queryFn: dataService.donations,
   });
-  const [rows, setRows] = useState<Donation[]>(data);
+  const [rows, setRows] = useState<Donation[]>([]);
   const dataRef = useRef<string>("");
 
   useEffect(() => {
-    const dataString = JSON.stringify(data);
-    if (dataRef.current !== dataString) {
-      dataRef.current = dataString;
-      setRows(data);
+    if (data) {
+      const dataString = JSON.stringify(data);
+      if (dataRef.current !== dataString) {
+        dataRef.current = dataString;
+        setRows(data);
+      }
     }
   }, [data]);
 

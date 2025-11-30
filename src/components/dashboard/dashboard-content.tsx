@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { dataService } from "@/lib/data-service";
+import { Resident, Staff, Donation, Visitor } from "@/types/tables";
 import { KpiCard } from "../kpi-card";
 import { MonthlyDonationsChart } from "../charts/monthly-donations-chart";
 import { VisitorTrafficChart } from "../charts/visitor-traffic-chart";
@@ -16,19 +17,19 @@ const monthFormatter = new Intl.DateTimeFormat("en-IN", {
 });
 
 export function DashboardContent() {
-  const { data: residentData = [] } = useQuery({
+  const { data: residentData = [] } = useQuery<Resident[]>({
     queryKey: ["residents"],
     queryFn: dataService.residents,
   });
-  const { data: staffData = [] } = useQuery({
+  const { data: staffData = [] } = useQuery<Staff[]>({
     queryKey: ["staff"],
     queryFn: dataService.staff,
   });
-  const { data: donationData = [] } = useQuery({
+  const { data: donationData = [] } = useQuery<Donation[]>({
     queryKey: ["donations"],
     queryFn: dataService.donations,
   });
-  const { data: visitorData = [] } = useQuery({
+  const { data: visitorData = [] } = useQuery<Visitor[]>({
     queryKey: ["visitors"],
     queryFn: dataService.visitors,
   });

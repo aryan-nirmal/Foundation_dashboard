@@ -26,18 +26,20 @@ const formFields: FieldConfig<MedicalRecord>[] = [
 ];
 
 export default function MedicalPage() {
-  const { data = [] } = useQuery({
+  const { data } = useQuery<MedicalRecord[]>({
     queryKey: ["medical"],
     queryFn: dataService.medical,
   });
-  const [rows, setRows] = useState<MedicalRecord[]>(data);
+  const [rows, setRows] = useState<MedicalRecord[]>([]);
   const dataRef = useRef<string>("");
 
   useEffect(() => {
-    const dataString = JSON.stringify(data);
-    if (dataRef.current !== dataString) {
-      dataRef.current = dataString;
-      setRows(data);
+    if (data) {
+      const dataString = JSON.stringify(data);
+      if (dataRef.current !== dataString) {
+        dataRef.current = dataString;
+        setRows(data);
+      }
     }
   }, [data]);
 

@@ -28,18 +28,20 @@ const formFields: FieldConfig<Resident>[] = [
 ];
 
 export default function ResidentsPage() {
-  const { data = [] } = useQuery({
+  const { data } = useQuery<Resident[]>({
     queryKey: ["residents"],
     queryFn: dataService.residents,
   });
-  const [rows, setRows] = useState<Resident[]>(data);
+  const [rows, setRows] = useState<Resident[]>([]);
   const dataRef = useRef<string>("");
 
   useEffect(() => {
-    const dataString = JSON.stringify(data);
-    if (dataRef.current !== dataString) {
-      dataRef.current = dataString;
-      setRows(data);
+    if (data) {
+      const dataString = JSON.stringify(data);
+      if (dataRef.current !== dataString) {
+        dataRef.current = dataString;
+        setRows(data);
+      }
     }
   }, [data]);
 

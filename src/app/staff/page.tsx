@@ -48,18 +48,20 @@ const formFields: FieldConfig<Staff>[] = [
 ];
 
 export default function StaffPage() {
-  const { data = [] } = useQuery({
+  const { data } = useQuery<Staff[]>({
     queryKey: ["staff"],
     queryFn: dataService.staff,
   });
-  const [rows, setRows] = useState<Staff[]>(data);
+  const [rows, setRows] = useState<Staff[]>([]);
   const dataRef = useRef<string>("");
 
   useEffect(() => {
-    const dataString = JSON.stringify(data);
-    if (dataRef.current !== dataString) {
-      dataRef.current = dataString;
-      setRows(data);
+    if (data) {
+      const dataString = JSON.stringify(data);
+      if (dataRef.current !== dataString) {
+        dataRef.current = dataString;
+        setRows(data);
+      }
     }
   }, [data]);
 
