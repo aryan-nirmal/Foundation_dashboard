@@ -1,3 +1,12 @@
+import type {
+  Caretaker,
+  Donation,
+  MedicalRecord,
+  Resident,
+  Staff,
+  Visitor,
+} from "@/types/tables";
+
 const fetcher = async <T,>(resource: string): Promise<T> => {
   const response = await fetch(`/api/data/${resource}`, {
     headers: {
@@ -14,11 +23,11 @@ const fetcher = async <T,>(resource: string): Promise<T> => {
 };
 
 export const dataService = {
-  residents: () => fetcher("residents"),
-  staff: () => fetcher("staff"),
-  caretakers: () => fetcher("caretakers"),
-  visitors: () => fetcher("visitors"),
-  donations: () => fetcher("donations"),
-  medical: () => fetcher("medical"),
+  residents: (): Promise<Resident[]> => fetcher<Resident[]>("residents"),
+  staff: (): Promise<Staff[]> => fetcher<Staff[]>("staff"),
+  caretakers: (): Promise<Caretaker[]> => fetcher<Caretaker[]>("caretakers"),
+  visitors: (): Promise<Visitor[]> => fetcher<Visitor[]>("visitors"),
+  donations: (): Promise<Donation[]> => fetcher<Donation[]>("donations"),
+  medical: (): Promise<MedicalRecord[]> => fetcher<MedicalRecord[]>("medical"),
 };
 

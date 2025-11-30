@@ -73,7 +73,7 @@ export default function VisitorsPage() {
         onAdd={(values) =>
           setRows((prev) => [
             ...prev,
-            { id: crypto.randomUUID(), ...(normalize(values) as Visitor) },
+            { ...normalize(values), id: crypto.randomUUID() },
           ])
         }
         onEdit={(updated) =>

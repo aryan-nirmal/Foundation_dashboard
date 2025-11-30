@@ -53,7 +53,7 @@ export default function CaretakersPage() {
         onAdd={(values) =>
           setRows((prev) => [
             ...prev,
-            { id: crypto.randomUUID(), ...(normalize(values) as Caretaker) },
+            { ...normalize(values), id: crypto.randomUUID() },
           ])
         }
         onEdit={(updated) =>

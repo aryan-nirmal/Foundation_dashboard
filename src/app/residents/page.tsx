@@ -68,7 +68,7 @@ export default function ResidentsPage() {
         onAdd={(values) =>
           setRows((prev) => [
             ...prev,
-            { id: crypto.randomUUID(), ...(values as Resident) },
+            { ...(values as Resident), id: crypto.randomUUID() },
           ])
         }
         onEdit={(updated) =>

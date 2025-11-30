@@ -95,7 +95,7 @@ export default function StaffPage() {
         onAdd={(values) =>
           setRows((prev) => [
             ...prev,
-            { id: crypto.randomUUID(), ...(normalize(values) as Staff) },
+            { ...normalize(values), id: crypto.randomUUID() },
           ])
         }
         onEdit={(updated) =>

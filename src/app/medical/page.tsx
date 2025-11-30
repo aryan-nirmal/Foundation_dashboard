@@ -69,7 +69,7 @@ export default function MedicalPage() {
         onAdd={(values) =>
           setRows((prev) => [
             ...prev,
-            { id: crypto.randomUUID(), ...(normalize(values) as MedicalRecord) },
+            { ...normalize(values), id: crypto.randomUUID() },
           ])
         }
         onEdit={(updated) =>

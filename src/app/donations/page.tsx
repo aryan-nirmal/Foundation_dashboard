@@ -80,7 +80,7 @@ export default function DonationsPage() {
         onAdd={(values) =>
           setRows((prev) => [
             ...prev,
-            { id: crypto.randomUUID(), ...(normalize(values) as Donation) },
+            { ...normalize(values), id: crypto.randomUUID() },
           ])
         }
         onEdit={(updated) =>
