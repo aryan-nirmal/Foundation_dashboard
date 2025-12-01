@@ -2,10 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+
 import { DataTable, FieldConfig } from "@/components/data-table";
-import { MedicalRecord } from "@/types/tables";
+import { apiClient } from "@/lib/api-client";
 import { dataService } from "@/lib/data-service";
 import { formatDate } from "@/lib/formatters";
+import { MedicalRecord } from "@/types/tables";
 
 const formFields: FieldConfig<MedicalRecord>[] = [
   { name: "patient_name", label: "Patient Name" },
@@ -24,6 +26,8 @@ const formFields: FieldConfig<MedicalRecord>[] = [
   { name: "record_date", label: "Record Date", type: "date" },
   { name: "time_slot", label: "Time Slot", type: "time" },
 ];
+
+const resource = "medical";
 
 export default function MedicalPage() {
   const { data } = useQuery<MedicalRecord[]>({
@@ -45,8 +49,44 @@ export default function MedicalPage() {
 
   const normalize = (values: Omit<MedicalRecord, "id">) => ({
     ...values,
-    age: Number(values.age),
+    age: values.age != null ? Number(values.age) : null,
   });
+
+  async function handleAdd(values: Omit<MedicalRecord, "id">) {
+    try {
+      const payload = normalize(values);
+      const created = await apiClient.create<MedicalRecord>(resource, payload);
+      setRows((prev) => [...prev, created]);
+    } catch (error) {
+      console.error("Failed to add medical record", error);
+    }
+  }
+
+  async function handleEdit(values: MedicalRecord) {
+    try {
+      const { id, ...rest } = values;
+      const payload = normalize(rest as Omit<MedicalRecord, "id">);
+      const updated = await apiClient.update<MedicalRecord>(
+        resource,
+        String(id),
+        payload,
+      );
+      setRows((prev) =>
+        prev.map((row) => (row.id === updated.id ? updated : row)),
+      );
+    } catch (error) {
+      console.error("Failed to update medical record", error);
+    }
+  }
+
+  async function handleDelete(id: MedicalRecord["id"]) {
+    try {
+      await apiClient.remove<MedicalRecord>(resource, String(id));
+      setRows((prev) => prev.filter((row) => row.id !== id));
+    } catch (error) {
+      console.error("Failed to delete medical record", error);
+    }
+  }
 
   return (
     <section className="space-y-6">
@@ -62,28 +102,18 @@ export default function MedicalPage() {
         columns={[
           { key: "patient_name", label: "Patient" },
           { key: "diagnosis", label: "Diagnosis" },
-          { key: "record_date", label: "Date", render: (value) => formatDate(String(value)) },
+          {
+            key: "record_date",
+            label: "Date",
+            render: (value) => formatDate(String(value)),
+          },
           { key: "time_slot", label: "Time" },
         ]}
         formFields={formFields}
-        onAdd={(values) =>
-          setRows((prev) => [
-            ...prev,
-            { ...normalize(values), id: crypto.randomUUID() },
-          ])
-        }
-        onEdit={(updated) =>
-          setRows((prev) =>
-            prev.map((row) =>
-              row.id === updated.id ? { ...row, ...normalize(updated) } : row,
-            ),
-          )
-        }
-        onDelete={(id) =>
-          setRows((prev) => prev.filter((row) => row.id !== id))
-        }
+        onAdd={handleAdd}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
       />
     </section>
   );
 }
-

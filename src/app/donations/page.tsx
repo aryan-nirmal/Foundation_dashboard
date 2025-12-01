@@ -2,10 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+
 import { DataTable, FieldConfig } from "@/components/data-table";
-import { Donation } from "@/types/tables";
+import { apiClient } from "@/lib/api-client";
 import { dataService } from "@/lib/data-service";
 import { currency, formatDate } from "@/lib/formatters";
+import { Donation } from "@/types/tables";
 
 const formFields: FieldConfig<Donation>[] = [
   { name: "donor_name", label: "Donor Name" },
@@ -24,6 +26,8 @@ const formFields: FieldConfig<Donation>[] = [
   { name: "donation_date", label: "Donation Date", type: "date" },
   { name: "city", label: "City" },
 ];
+
+const resource = "donations";
 
 export default function DonationsPage() {
   const { data } = useQuery<Donation[]>({
@@ -48,6 +52,42 @@ export default function DonationsPage() {
     age: Number(values.age),
     amount: Number(values.amount),
   });
+
+  async function handleAdd(values: Omit<Donation, "id">) {
+    try {
+      const payload = normalize(values);
+      const created = await apiClient.create<Donation>(resource, payload);
+      setRows((prev) => [...prev, created]);
+    } catch (error) {
+      console.error("Failed to add donation", error);
+    }
+  }
+
+  async function handleEdit(values: Donation) {
+    try {
+      const { id, ...rest } = values;
+      const payload = normalize(rest as Omit<Donation, "id">);
+      const updated = await apiClient.update<Donation>(
+        resource,
+        String(id),
+        payload,
+      );
+      setRows((prev) =>
+        prev.map((row) => (row.id === updated.id ? updated : row)),
+      );
+    } catch (error) {
+      console.error("Failed to update donation", error);
+    }
+  }
+
+  async function handleDelete(id: Donation["id"]) {
+    try {
+      await apiClient.remove<Donation>(resource, String(id));
+      setRows((prev) => prev.filter((row) => row.id !== id));
+    } catch (error) {
+      console.error("Failed to delete donation", error);
+    }
+  }
 
   return (
     <section className="space-y-6">
@@ -77,24 +117,10 @@ export default function DonationsPage() {
         ]}
         formFields={formFields}
         highlightRow={(row) => row.amount > 10000}
-        onAdd={(values) =>
-          setRows((prev) => [
-            ...prev,
-            { ...normalize(values), id: crypto.randomUUID() },
-          ])
-        }
-        onEdit={(updated) =>
-          setRows((prev) =>
-            prev.map((row) =>
-              row.id === updated.id ? { ...row, ...normalize(updated) } : row,
-            ),
-          )
-        }
-        onDelete={(id) =>
-          setRows((prev) => prev.filter((row) => row.id !== id))
-        }
+        onAdd={handleAdd}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
       />
     </section>
   );
 }
-

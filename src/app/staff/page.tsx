@@ -2,9 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+
 import { DataTable, FieldConfig } from "@/components/data-table";
-import { Staff } from "@/types/tables";
+import { apiClient } from "@/lib/api-client";
 import { dataService } from "@/lib/data-service";
+import { Staff } from "@/types/tables";
 
 const formFields: FieldConfig<Staff>[] = [
   { name: "employee_id", label: "Employee ID" },
@@ -47,6 +49,8 @@ const formFields: FieldConfig<Staff>[] = [
   },
 ];
 
+const resource = "staff";
+
 export default function StaffPage() {
   const { data } = useQuery<Staff[]>({
     queryKey: ["staff"],
@@ -73,6 +77,42 @@ export default function StaffPage() {
     };
   }
 
+  async function handleAdd(values: Omit<Staff, "id">) {
+    try {
+      const payload = normalize(values);
+      const created = await apiClient.create<Staff>(resource, payload);
+      setRows((prev) => [...prev, created]);
+    } catch (error) {
+      console.error("Failed to add staff member", error);
+    }
+  }
+
+  async function handleEdit(values: Staff) {
+    try {
+      const { id, ...rest } = values;
+      const payload = normalize(rest as Omit<Staff, "id">);
+      const updated = await apiClient.update<Staff>(
+        resource,
+        String(id),
+        payload,
+      );
+      setRows((prev) =>
+        prev.map((row) => (row.id === updated.id ? updated : row)),
+      );
+    } catch (error) {
+      console.error("Failed to update staff member", error);
+    }
+  }
+
+  async function handleDelete(id: Staff["id"]) {
+    try {
+      await apiClient.remove<Staff>(resource, String(id));
+      setRows((prev) => prev.filter((row) => row.id !== id));
+    } catch (error) {
+      console.error("Failed to delete staff member", error);
+    }
+  }
+
   return (
     <section className="space-y-6">
       <header className="rounded-3xl bg-white p-6 shadow-soft">
@@ -92,24 +132,10 @@ export default function StaffPage() {
           { key: "status", label: "Status" },
         ]}
         formFields={formFields}
-        onAdd={(values) =>
-          setRows((prev) => [
-            ...prev,
-            { ...normalize(values), id: crypto.randomUUID() },
-          ])
-        }
-        onEdit={(updated) =>
-          setRows((prev) =>
-            prev.map((row) =>
-              row.id === updated.id ? { ...row, ...normalize(updated) } : row,
-            ),
-          )
-        }
-        onDelete={(id) =>
-          setRows((prev) => prev.filter((row) => row.id !== id))
-        }
+        onAdd={handleAdd}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
       />
     </section>
   );
 }
-

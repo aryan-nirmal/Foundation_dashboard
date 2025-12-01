@@ -2,9 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+
 import { DataTable, FieldConfig } from "@/components/data-table";
-import { Resident } from "@/types/tables";
+import { apiClient } from "@/lib/api-client";
 import { dataService } from "@/lib/data-service";
+import { Resident } from "@/types/tables";
 
 const formFields: FieldConfig<Resident>[] = [
   { name: "name", label: "Full Name" },
@@ -27,6 +29,8 @@ const formFields: FieldConfig<Resident>[] = [
   { name: "remarks", label: "Remarks" },
 ];
 
+const resource = "residents";
+
 export default function ResidentsPage() {
   const { data } = useQuery<Resident[]>({
     queryKey: ["residents"],
@@ -44,6 +48,40 @@ export default function ResidentsPage() {
       }
     }
   }, [data]);
+
+  async function handleAdd(values: Omit<Resident, "id">) {
+    try {
+      const created = await apiClient.create<Resident>(resource, values);
+      setRows((prev) => [...prev, created]);
+    } catch (error) {
+      console.error("Failed to add resident", error);
+    }
+  }
+
+  async function handleEdit(values: Resident) {
+    try {
+      const { id, ...rest } = values;
+      const updated = await apiClient.update<Resident>(
+        resource,
+        String(id),
+        rest,
+      );
+      setRows((prev) =>
+        prev.map((row) => (row.id === updated.id ? updated : row)),
+      );
+    } catch (error) {
+      console.error("Failed to update resident", error);
+    }
+  }
+
+  async function handleDelete(id: Resident["id"]) {
+    try {
+      await apiClient.remove<Resident>(resource, String(id));
+      setRows((prev) => prev.filter((row) => row.id !== id));
+    } catch (error) {
+      console.error("Failed to delete resident", error);
+    }
+  }
 
   return (
     <section className="space-y-6">
@@ -65,22 +103,10 @@ export default function ResidentsPage() {
           { key: "remarks", label: "Remarks" },
         ]}
         formFields={formFields}
-        onAdd={(values) =>
-          setRows((prev) => [
-            ...prev,
-            { ...(values as Resident), id: crypto.randomUUID() },
-          ])
-        }
-        onEdit={(updated) =>
-          setRows((prev) =>
-            prev.map((row) => (row.id === updated.id ? updated : row)),
-          )
-        }
-        onDelete={(id) =>
-          setRows((prev) => prev.filter((row) => row.id !== id))
-        }
+        onAdd={handleAdd}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
       />
     </section>
   );
 }
-

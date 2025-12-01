@@ -2,10 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+
 import { DataTable, FieldConfig } from "@/components/data-table";
-import { Visitor } from "@/types/tables";
+import { apiClient } from "@/lib/api-client";
 import { dataService } from "@/lib/data-service";
 import { formatDate } from "@/lib/formatters";
+import { Visitor } from "@/types/tables";
 
 const formFields: FieldConfig<Visitor>[] = [
   { name: "name", label: "Visitor Name" },
@@ -27,6 +29,8 @@ const formFields: FieldConfig<Visitor>[] = [
   { name: "visit_date", label: "Visit Date", type: "date" },
   { name: "purpose", label: "Purpose" },
 ];
+
+const resource = "visitors";
 
 export default function VisitorsPage() {
   const { data } = useQuery<Visitor[]>({
@@ -51,6 +55,42 @@ export default function VisitorsPage() {
     age: Number(values.age),
   });
 
+  async function handleAdd(values: Omit<Visitor, "id">) {
+    try {
+      const payload = normalize(values);
+      const created = await apiClient.create<Visitor>(resource, payload);
+      setRows((prev) => [...prev, created]);
+    } catch (error) {
+      console.error("Failed to add visitor", error);
+    }
+  }
+
+  async function handleEdit(values: Visitor) {
+    try {
+      const { id, ...rest } = values;
+      const payload = normalize(rest as Omit<Visitor, "id">);
+      const updated = await apiClient.update<Visitor>(
+        resource,
+        String(id),
+        payload,
+      );
+      setRows((prev) =>
+        prev.map((row) => (row.id === updated.id ? updated : row)),
+      );
+    } catch (error) {
+      console.error("Failed to update visitor", error);
+    }
+  }
+
+  async function handleDelete(id: Visitor["id"]) {
+    try {
+      await apiClient.remove<Visitor>(resource, String(id));
+      setRows((prev) => prev.filter((row) => row.id !== id));
+    } catch (error) {
+      console.error("Failed to delete visitor", error);
+    }
+  }
+
   return (
     <section className="space-y-6">
       <header className="rounded-3xl bg-white p-6 shadow-soft">
@@ -64,30 +104,20 @@ export default function VisitorsPage() {
         data={rows}
         columns={[
           { key: "name", label: "Name" },
-          { key: "visit_date", label: "Visit Date", render: (value) => formatDate(String(value)) },
+          {
+            key: "visit_date",
+            label: "Visit Date",
+            render: (value) => formatDate(String(value)),
+          },
           { key: "in_time", label: "In" },
           { key: "out_time", label: "Out" },
           { key: "purpose", label: "Purpose" },
         ]}
         formFields={formFields}
-        onAdd={(values) =>
-          setRows((prev) => [
-            ...prev,
-            { ...normalize(values), id: crypto.randomUUID() },
-          ])
-        }
-        onEdit={(updated) =>
-          setRows((prev) =>
-            prev.map((row) =>
-              row.id === updated.id ? { ...row, ...normalize(updated) } : row,
-            ),
-          )
-        }
-        onDelete={(id) =>
-          setRows((prev) => prev.filter((row) => row.id !== id))
-        }
+        onAdd={handleAdd}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
       />
     </section>
   );
 }
-
